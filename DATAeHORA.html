@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hora Atual - Brasília</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #007bff; }
+        #relogio { font-size: 3rem; font-weight: bold; margin: 10px 0; }
+        #data { font-size: 1.2rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Horário de Brasília</h1>
+        <div id="relogio">00:00:00</div>
+        <div id="data">Carregando data...</div>
+    </div>
+
+    <script>
+        function atualizarHorario() {
+            const agora = new Date();
+            
+            // Força o fuso horário de Brasília (America/Sao_Paulo)
+            const opcoesData = { 
+                timeZone: 'America/Sao_Paulo', 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+            };
+            const opcoesHora = { 
+                timeZone: 'America/Sao_Paulo', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+
+            const dataFormatada = agora.toLocaleDateString('pt-BR', opcoesData);
+            const horaFormatada = agora.toLocaleTimeString('pt-BR', opcoesHora);
+
+            document.getElementById('relogio').textContent = horaFormatada;
+            document.getElementById('data').textContent = dataFormatada;
+        }
+
+        // Atualiza a cada 1 segundo (1000 milissegundos)
+        setInterval(atualizarHorario, 1000);
+
+        // Chama a função imediatamente ao carregar a página
+        atualizarHorario();
+    </script>
+</body>
+</html>

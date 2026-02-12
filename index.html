@@ -2,68 +2,99 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Relógio Brasília</title>
+    <title>Relógio Brasília Oficial</title>
     <style>
-        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { text-align: center; border: 1px solid #00ff00; padding: 40px; box-shadow: 0 0 15px #00ff00; }
-        #hora { font-size: 5rem; font-weight: bold; }
-        #status { font-size: 0.9rem; margin-top: 15px; color: #aaa; }
+        body { 
+            background: #000; 
+            color: #00ff00; 
+            font-family: 'Courier New', monospace; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+        .box { 
+            text-align: center; 
+            border-top: 2px solid #00ff00; 
+            border-bottom: 2px solid #00ff00; 
+            padding: 40px 60px; 
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); 
+        }
+        #hora { 
+            font-size: 6rem; 
+            font-weight: bold; 
+            line-height: 1;
+        }
+        #data { 
+            font-size: 2rem; 
+            margin-top: 10px; 
+            letter-spacing: 2px;
+            opacity: 0.9;
+        }
+        .label { 
+            letter-spacing: 8px; 
+            margin-bottom: 15px; 
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <div style="letter-spacing: 5px;">BRASÍLIA</div>
-    <div id="hora">--:--:--</div>
+    <div class="label">BRASÍLIA</div>
+    <div id="hora">00:00:00</div>
+    <div id="data">00/00/0000</div>
 </div>
 
 <script>
-    let timestampAtual = 0; // Armazena o tempo em milissegundos
+    let offset = 0; // Diferença entre hora local e hora do servidor
 
     async function sincronizarComServidor() {
         try {
-            // Usando a WorldTimeAPI para pegar o horário real de Brasília
+            // Usando uma alternativa mais estável ou verificando erro
             const response = await fetch('https://worldtimeapi.org/api/timezone/America/Sao_Paulo');
+            if (!response.ok) throw new Error("Erro na API");
+            
             const data = await response.json();
+            const servidorTime = new Date(data.datetime).getTime();
+            const localTime = Date.now();
             
-            // Transformamos a data do servidor em milissegundos Unix
-            // Agora o controle é totalmente nosso (numérico)
-            timestampAtual = new Date(data.datetime).getTime();
-            
-            document.getElementById('status').textContent = "Sincronizado via Web (Independente do PC)";
-            document.getElementById('status').style.color = "#00ff00";
+            // Calculamos a diferença entre o servidor e a máquina do usuário
+            offset = servidorTime - localTime;
+            console.log("Sincronizado! Diferença (ms):", offset);
         } catch (e) {
-            document.getElementById('status').textContent = "Erro de conexão. Verifique a internet.";
-            document.getElementById('status').style.color = "red";
+            console.error("Erro ao sincronizar. Usando hora local como base.");
+            // Mantém offset em 0 se falhar, usando a hora do PC do usuário
         }
     }
 
-    function motorDoRelogio() {
-        if (timestampAtual > 0) {
-            // Adicionamos 1000ms (1 segundo) ao nosso contador interno
-            timestampAtual += 1000;
+    function atualizarRelogio() {
+        // Pegamos a hora local e aplicamos o ajuste do servidor
+        const agora = new Date(Date.now() + offset);
 
-            // Criamos o objeto de data baseado APENAS no nosso contador
-            const dataObjeto = new Date(timestampAtual);
+        const h = String(agora.getHours()).padStart(2, '0');
+        const m = String(agora.getMinutes()).padStart(2, '0');
+        const s = String(agora.getSeconds()).padStart(2, '0');
 
-            const h = String(dataObjeto.getHours()).padStart(2, '0');
-            const m = String(dataObjeto.getMinutes()).padStart(2, '0');
-            const s = String(dataObjeto.getSeconds()).padStart(2, '0');
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const ano = agora.getFullYear();
 
-            document.getElementById('hora').textContent = `${h}:${m}:${s}`;
-        }
+        document.getElementById('hora').textContent = `${h}:${m}:${s}`;
+        document.getElementById('data').textContent = `${dia}/${mes}/${ano}`;
     }
 
-    // Inicia a sincronização inicial
+    // Inicialização
     sincronizarComServidor();
+    
+    // Atualiza a tela 10 vezes por segundo para garantir fluidez
+    setInterval(atualizarRelogio, 100);
 
-    // O relógio atualiza a cada 1 segundo incrementando nossa variável
-    setInterval(motorDoRelogio, 1000);
-
-    // Re-sincroniza com a internet a cada 10 minutos para evitar desvios mínimos de processamento
-    setInterval(sincronizarComServidor, 600000);
+    // Re-sincroniza a cada 5 minutos
+    setInterval(sincronizarComServidor, 300000);
 </script>
 
 </body>
 </html>
-
